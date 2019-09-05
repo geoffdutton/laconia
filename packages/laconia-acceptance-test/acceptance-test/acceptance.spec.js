@@ -1,3 +1,7 @@
+const SLS_STATE = require("../.serverless/serverless-state");
+// Override it
+process.env.AWS_REGION = SLS_STATE.service.provider.region;
+
 const frisby = require("frisby");
 const uuidv4 = require("uuid/v4");
 const Joi = frisby.Joi;
@@ -6,7 +10,7 @@ const S3TotalOrderStorage = require("../src/S3TotalOrderStorage");
 const laconiaTest = require("@laconia/test");
 const WebSocket = require("ws");
 
-const SERVERLESS_SERVICE_NAME = "laconia-acceptance";
+const SERVERLESS_SERVICE_NAME = SLS_STATE.service.service;
 const SERVERLESS_STAGE = process.env.NODE_VERSION;
 const prefix = `${SERVERLESS_SERVICE_NAME}-${SERVERLESS_STAGE}`;
 const name = name => `${prefix}-${name}`;
@@ -66,7 +70,7 @@ const getOrderUrl = async () => {
   if (!restApi) {
     throw new Error(`${restApiName} could not be found!`);
   }
-  return `https://${restApi.id}.execute-api.eu-west-1.amazonaws.com/${SERVERLESS_STAGE}/order`;
+  return `https://${restApi.id}.execute-api.${process.env.AWS_REGION}.amazonaws.com/${SERVERLESS_STAGE}/order`;
 };
 
 const getWebSocketUrl = async () => {
@@ -156,14 +160,12 @@ describe("order flow", () => {
     );
   });
 
-  beforeAll(async () => {
-    orderUrl = await getOrderUrl();
-  });
   beforeAll(() => captureCardPayment.spy.clear());
   beforeAll(() => sendEmail.spy.clear());
   beforeAll(() => totalOrderStorage.clearAll());
 
   beforeAll(async () => {
+    orderUrl = await getOrderUrl();
     const orders = [
       { restaurantId: 1, total: 10 },
       { restaurantId: 2, total: 3 },
@@ -176,7 +178,7 @@ describe("order flow", () => {
       { restaurantId: 9, total: 100 },
       { restaurantId: 9, total: 10 }
     ].map(({ restaurantId, total }) => createOrder(restaurantId, total));
-    const orderUrl = await getOrderUrl();
+    console.log({ orderUrl });
     const responses = await Promise.all(
       orders.map(order => placeOrder(orderUrl, order))
     );
@@ -197,11 +199,11 @@ describe("order flow", () => {
 
   describe("happy path", () => {
     it("should store all placed orders in Order Table", async () => {
-      Object.keys(orderMap).forEach(async orderId => {
+      for (const orderId of Object.keys(orderMap)) {
         const savedOrder = await orderRepository.find(orderId);
         expect(savedOrder).toEqual(expect.objectContaining(orderMap[orderId]));
         expect(savedOrder.orderId).toEqual(orderId);
-      });
+      }
     });
 
     it("should invoke send email lambda, which is coming from the chain of place-order, notify-restaurant, fake-restaurant, accept-order, and notify-user", async () => {

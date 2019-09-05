@@ -24,11 +24,14 @@
   },
   "scripts": {
     "test": "npm run test:8",
-    "test:8": "NODE_VERSION=node8 jest /acceptance-test",
+    "test:8": "NODE_VERSION=node8 jest /acceptance-test --runInBand",
+    "test:10": "NODE_VERSION=node10 jest /acceptance-test --runInBand",
     "deploy": "npm run deploy:8",
     "deploy:8": "NODE_RUNTIME=nodejs8.10 NODE_VERSION=node8 sls deploy",
+    "deploy:10": "NODE_RUNTIME=nodejs10.x NODE_VERSION=node10 sls deploy",
     "remove": "npm run remove:8",
-    "remove:8": "NODE_RUNTIME=nodejs8.10 NODE_VERSION=node8 sls remove"
+    "remove:8": "NODE_RUNTIME=nodejs8.10 NODE_VERSION=node8 sls remove",
+    "remove:10": "NODE_RUNTIME=nodejs10.x NODE_VERSION=node10 sls remove"
   },
   "dependencies": {
     "@laconia/adapter": "^1.4.0",
@@ -51,11 +54,12 @@
   },
   "devDependencies": {
     "@laconia/test-helper": "file:../laconia-test-helper",
-    "frisby": "^2.0.16",
-    "serverless": "^1.42.3",
+    "frisby": "^2.1.2",
+    "jest": "^24.9.0",
+    "serverless": "^1.51.0",
     "serverless-s3-remover": "^0.6.0",
-    "serverless-s3-sync": "^1.6.1",
-    "ws": "^7.0.0"
+    "serverless-s3-sync": "^1.8.0",
+    "ws": "^7.1.2"
   },
   "engines": {
     "node": ">=8.10"

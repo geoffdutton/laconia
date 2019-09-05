@@ -1,4 +1,4 @@
-service: laconia-acceptance
+service: gd-laconia-acceptance
 
 plugins:
   - serverless-s3-remover
